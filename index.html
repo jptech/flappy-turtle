@@ -44,20 +44,21 @@
             user-select: none;
         }
         
-        /* Mobile responsiveness */
-        @media screen and (max-width: 420px) {
+        /* Mobile responsiveness - maintain original dimensions */
+        @media screen and (max-width: 768px) {
             #gameContainer {
-                width: 100vw;
-                height: 100vh;
-                border-radius: 0;
-                border: none;
+                /* Always keep original dimensions for game logic */
+                width: 400px !important;
+                height: 600px !important;
+                /* Will be scaled via JavaScript */
+                transform-origin: top left;
+                position: absolute;
+                top: 50%;
+                left: 50%;
             }
-        }
-        
-        @media screen and (max-height: 620px) and (orientation: landscape) {
-            #gameContainer {
-                height: 100vh;
-                width: calc(100vh * 0.667);
+            
+            body {
+                background: linear-gradient(to bottom, #7dd3fc 0%, #93c5fd 100%);
             }
         }
         
@@ -1125,8 +1126,36 @@
             return false;
         });
         
+        // Function to scale game container for mobile
+        function scaleGameContainer() {
+            const container = document.getElementById('gameContainer');
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Only apply scaling on mobile devices
+            if (windowWidth <= 768) {
+                const scaleX = windowWidth / 400;
+                const scaleY = windowHeight / 600;
+                const scale = Math.min(scaleX, scaleY) * 0.95; // 0.95 for some padding
+                
+                // Apply transform with proper centering
+                container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            } else {
+                // Reset transform on desktop
+                container.style.transform = '';
+                container.style.top = '';
+                container.style.left = '';
+                container.style.position = '';
+            }
+        }
+        
+        // Apply scaling on load
+        scaleGameContainer();
+        
         // Handle window resize for mobile orientation changes
         window.addEventListener('resize', () => {
+            scaleGameContainer();
+            
             // Update orientation message language if needed
             const orientationElements = document.querySelectorAll('.orientation-message [data-en][data-zh]');
             orientationElements.forEach(element => {
