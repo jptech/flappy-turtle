@@ -94,8 +94,8 @@
             position: absolute;
             width: 18px;
             height: 16px;
-            top: 11px;
-            right: -10px;
+            top: 10px;
+            right: -8px;
             z-index: 1;
         }
         
@@ -174,52 +174,81 @@
             transform: translateX(-50%);
         }
         
-        /* Bowtie at base of neck */
+        /* Bowtie positioned at neck/chest junction */
         .bowtie {
             position: absolute;
-            width: 16px;
-            height: 9px;
+            width: 22px;
+            height: 13px;
             top: 18px;
-            right: 14px;
-            z-index: 2;
-            transform: rotate(-3deg);
+            right: 13px;
+            z-index: 3;
+            transform: rotate(-10deg);
         }
         
-        .bowtie::before,
+        /* Left wing of bowtie - well-defined fabric look */
+        .bowtie::before {
+            content: '';
+            position: absolute;
+            width: 9px;
+            height: 13px;
+            background: linear-gradient(145deg, #ff6b6b 0%, #ef4444 30%, #dc2626 70%, #b91c1c 100%);
+            top: 0;
+            left: 0;
+            transform: skew(-12deg) perspective(10px) rotateY(-5deg);
+            border-radius: 4px 1px 4px 4px;
+            box-shadow: 
+                inset 1px 1px 2px rgba(255,255,255,0.5),
+                inset -1px -1px 2px rgba(139,0,0,0.4),
+                0 2px 3px rgba(0,0,0,0.25);
+            border: 0.5px solid #991b1b;
+        }
+        
+        /* Right wing of bowtie - well-defined fabric look */
         .bowtie::after {
             content: '';
             position: absolute;
-            width: 6px;
-            height: 9px;
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            width: 9px;
+            height: 13px;
+            background: linear-gradient(145deg, #ff6b6b 0%, #ef4444 30%, #dc2626 70%, #b91c1c 100%);
             top: 0;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
-        
-        .bowtie::before {
-            left: 0;
-            transform: skew(-12deg);
-            border-radius: 2px 0 2px 2px;
-        }
-        
-        .bowtie::after {
             right: 0;
-            transform: skew(12deg);
-            border-radius: 0 2px 2px 2px;
+            transform: skew(12deg) perspective(10px) rotateY(5deg);
+            border-radius: 1px 4px 4px 4px;
+            box-shadow: 
+                inset 1px 1px 2px rgba(255,255,255,0.5),
+                inset -1px -1px 2px rgba(139,0,0,0.4),
+                0 2px 3px rgba(0,0,0,0.25);
+            border: 0.5px solid #991b1b;
         }
         
-        /* Bowtie center knot */
+        /* Bowtie center knot - clean and prominent */
         .bowtie-knot {
             position: absolute;
-            width: 4px;
-            height: 7px;
-            background: linear-gradient(to bottom, #dc2626 0%, #b91c1c 100%);
+            width: 6px;
+            height: 9px;
+            background: linear-gradient(to bottom, #ef4444 0%, #dc2626 60%, #991b1b 100%);
             left: 50%;
-            top: 1px;
+            top: 2px;
             transform: translateX(-50%);
-            border-radius: 1px;
-            z-index: 1;
-            box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+            border-radius: 2px;
+            z-index: 2;
+            box-shadow: 
+                inset 0 1px 1px rgba(255,255,255,0.4),
+                0 1px 2px rgba(0,0,0,0.3);
+            border: 0.5px solid #7f1d1d;
+        }
+        
+        /* Add a highlight dot to the knot */
+        .bowtie-knot::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,255,255,0.7);
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
         }
         
         /* Front legs/flippers - more integrated */
