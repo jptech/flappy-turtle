@@ -1001,6 +1001,7 @@
                 bottom: turtleRect.bottom - containerRect.top
             };
             
+            // Check ground and ceiling collision
             if (turtleRelativeRect.top < 0 || turtleRelativeRect.bottom > 520) {
                 return true;
             }
