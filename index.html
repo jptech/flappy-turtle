@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Flappy Turtle</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
@@ -16,18 +19,42 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Fredoka', cursive;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         #gameContainer {
             position: relative;
             width: 400px;
             height: 600px;
+            max-width: 100vw;
+            max-height: 100vh;
             overflow: hidden;
             border: 4px solid #2d3748;
             background: linear-gradient(to bottom, #7dd3fc 0%, #93c5fd 50%, #a5b4fc 80%, #c7d2fe 100%);
             cursor: pointer;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             border-radius: 12px;
+        }
+        
+        /* Mobile responsiveness */
+        @media screen and (max-width: 420px) {
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+        }
+        
+        @media screen and (max-height: 620px) and (orientation: landscape) {
+            #gameContainer {
+                height: 100vh;
+                width: calc(100vh * 0.667);
+            }
         }
         
         #turtle {
@@ -467,6 +494,59 @@
             box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
         }
         
+        /* Show/hide mobile vs desktop instructions */
+        @media (hover: none) and (pointer: coarse) {
+            .desktop-instruction { display: none !important; }
+            .mobile-instruction { display: inline !important; }
+        }
+        
+        /* Mobile adjustments for game screens */
+        @media screen and (max-width: 420px) {
+            #startScreen, #gameOverScreen {
+                padding: 25px 30px;
+                width: 85%;
+                max-width: 320px;
+            }
+            
+            #startScreen h1, #gameOverScreen h2 {
+                font-size: 28px;
+            }
+            
+            #startScreen p, #gameOverScreen p {
+                font-size: 16px;
+            }
+            
+            #startScreen button, #gameOverScreen button {
+                padding: 12px 30px;
+                font-size: 18px;
+            }
+            
+            #startScreen .turtle-emoji {
+                font-size: 45px;
+            }
+            
+            #scoreDisplay {
+                font-size: 42px;
+                top: 20px;
+            }
+        }
+        
+        @media screen and (max-height: 568px) {
+            #startScreen, #gameOverScreen {
+                padding: 20px 25px;
+            }
+            
+            #startScreen h1, #gameOverScreen h2 {
+                font-size: 24px;
+                margin-bottom: 15px;
+            }
+            
+            #startScreen .turtle-emoji {
+                font-size: 40px;
+                margin-bottom: 10px;
+            }
+        }
+        
         .ocean-floor {
             position: absolute;
             bottom: 0;
@@ -618,9 +698,78 @@
             font-size: 14px;
             min-width: 30px;
         }
+        
+        /* Mobile adjustments for language toggle */
+        @media screen and (max-width: 420px) {
+            .language-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
+            .language-toggle .flag {
+                font-size: 18px;
+            }
+            
+            .language-toggle .lang-text {
+                font-size: 12px;
+            }
+        }
+        
+        /* Orientation message for mobile */
+        .orientation-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            z-index: 20000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .orientation-message h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        
+        .orientation-message p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .orientation-message .rotate-icon {
+            font-size: 60px;
+            animation: rotatePhone 2s ease-in-out infinite;
+        }
+        
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+        
+        @media screen and (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+            .orientation-message {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Orientation message for mobile landscape -->
+    <div class="orientation-message">
+        <div class="rotate-icon">📱</div>
+        <h2 data-en="Please Rotate Your Device" data-zh="请旋转您的设备">Please Rotate Your Device</h2>
+        <p data-en="This game is best played in portrait mode" data-zh="此游戏最适合竖屏模式">This game is best played in portrait mode</p>
+    </div>
+    
     <!-- Language toggle button (outside game container) -->
     <button class="language-toggle" onclick="toggleLanguage()">
         <span class="flag">🇺🇸</span>
@@ -662,7 +811,8 @@
         <div id="startScreen">
             <div class="turtle-emoji">🐢</div>
             <h1 data-en="Flappy Turtle" data-zh="飞天乌龟">Flappy Turtle</h1>
-            <p><strong data-en="Click or Press Space to Swim!" data-zh="点击或空格键游泳">Click or Press Space to Swim!</strong></p>
+            <p><strong class="desktop-instruction" data-en="Click or Press Space to Swim!" data-zh="点击或空格键游泳">Click or Press Space to Swim!</strong>
+               <strong class="mobile-instruction" data-en="Tap to Swim!" data-zh="点击游泳！" style="display: none;">Tap to Swim!</strong></p>
             <p data-en="Guide the dapper turtle through the coral pipes" data-zh="带领乌龟穿过珊瑚管">Guide the dapper turtle through the coral pipes</p>
             <button onclick="startGame()" data-en="Start Adventure" data-zh="开始游戏">Start Adventure</button>
         </div>
@@ -686,15 +836,7 @@
             const elements = document.querySelectorAll('[data-en][data-zh]');
             elements.forEach(element => {
                 const text = element.getAttribute(`data-${currentLanguage}`);
-                if (element.tagName === 'BUTTON') {
-                    element.textContent = text;
-                } else if (element.tagName === 'STRONG') {
-                    element.textContent = text;
-                } else if (element.tagName === 'SPAN') {
-                    element.textContent = text;
-                } else {
-                    element.textContent = text;
-                }
+                element.textContent = text;
             });
             
             // Update language toggle button
@@ -922,17 +1064,52 @@
             startGame();
         }
         
-        gameContainer.addEventListener('click', () => {
+        // Unified input handling for click and touch
+        function handleInput(e) {
+            e.preventDefault();
+            if (gameStarted) {
+                jump();
+            }
+        }
+        
+        // Mouse/click events
+        gameContainer.addEventListener('click', handleInput);
+        
+        // Touch events for mobile
+        gameContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             if (gameStarted) {
                 jump();
             }
         });
         
+        // Prevent double-tap zoom on mobile
+        gameContainer.addEventListener('touchend', (e) => {
+            e.preventDefault();
+        });
+        
+        // Keyboard events
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && gameStarted) {
                 e.preventDefault();
                 jump();
             }
+        });
+        
+        // Prevent context menu on long press
+        gameContainer.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Handle window resize for mobile orientation changes
+        window.addEventListener('resize', () => {
+            // Update orientation message language if needed
+            const orientationElements = document.querySelectorAll('.orientation-message [data-en][data-zh]');
+            orientationElements.forEach(element => {
+                const text = element.getAttribute(`data-${currentLanguage}`);
+                element.textContent = text;
+            });
         });
         
         bestScoreElement.textContent = bestScore;
