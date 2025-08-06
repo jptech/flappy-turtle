@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Turtle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Fredoka', cursive;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            overflow: hidden;
+            border: 4px solid #2d3748;
+            background: linear-gradient(to bottom, #7dd3fc 0%, #93c5fd 50%, #a5b4fc 80%, #c7d2fe 100%);
+            cursor: pointer;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 12px;
+        }
+        
+        #turtle {
+            position: absolute;
+            width: 65px;
+            height: 50px;
+            left: 80px;
+            z-index: 10;
+            transition: transform 0.15s ease-out;
+        }
+        
+        /* Main turtle body - integrated oval shape */
+        .turtle-body {
+            position: absolute;
+            width: 48px;
+            height: 38px;
+            background: linear-gradient(145deg, #2d8b4e 0%, #247a43 100%);
+            border-radius: 45% 55% 50% 50% / 50% 50% 50% 50%;
+            top: 8px;
+            left: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            overflow: visible;
+        }
+        
+        /* Shell dome pattern overlay */
+        .shell {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(52,208,88,0.6) 0%, rgba(45,139,78,0.8) 40%, rgba(30,90,51,0.6) 100%);
+            border-radius: inherit;
+            overflow: hidden;
+        }
+        
+        /* Shell hexagon pattern */
+        .shell::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(60deg, transparent 46%, #1e5a33 46%, #1e5a33 54%, transparent 54%),
+                linear-gradient(-60deg, transparent 46%, #1e5a33 46%, #1e5a33 54%, transparent 54%),
+                linear-gradient(0deg, transparent 46%, #1e5a33 46%, #1e5a33 54%, transparent 54%);
+            background-size: 12px 12px;
+            background-position: center;
+            opacity: 0.25;
+        }
+        
+        /* Shell shine for 3D effect */
+        .shell::after {
+            content: '';
+            position: absolute;
+            width: 45%;
+            height: 35%;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.35) 0%, transparent 65%);
+            top: 6px;
+            left: 8px;
+            border-radius: 50%;
+        }
+        
+        /* Head - naturally extending from shell opening */
+        .head {
+            position: absolute;
+            width: 18px;
+            height: 16px;
+            top: 11px;
+            right: -10px;
+            z-index: 1;
+        }
+        
+        /* Head shape - teardrop/oval */
+        .head::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #3bd062 0%, #2d8b4e 100%);
+            border-radius: 60% 40% 50% 50% / 50% 50% 50% 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        
+        /* Neck connection to make head flow from body */
+        .head::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 10px;
+            background: #2d8b4e;
+            left: -4px;
+            top: 3px;
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        /* Face details container */
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+        
+        /* Eyes positioned naturally */
+        .eye {
+            position: absolute;
+            width: 3.5px;
+            height: 3.5px;
+            background: #0a0a0a;
+            border-radius: 50%;
+            top: 5px;
+        }
+        
+        .eye.left {
+            left: 4px;
+        }
+        
+        .eye.right {
+            right: 4px;
+        }
+        
+        /* Eye reflection */
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 1.2px;
+            height: 1.2px;
+            background: white;
+            border-radius: 50%;
+            top: 0.5px;
+            left: 0.5px;
+        }
+        
+        /* Subtle smile */
+        .mouth {
+            position: absolute;
+            width: 6px;
+            height: 3px;
+            border: 1.2px solid rgba(30,90,51,0.6);
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* Bowtie at base of neck */
+        .bowtie {
+            position: absolute;
+            width: 16px;
+            height: 9px;
+            top: 18px;
+            right: 14px;
+            z-index: 2;
+            transform: rotate(-3deg);
+        }
+        
+        .bowtie::before,
+        .bowtie::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 9px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            top: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .bowtie::before {
+            left: 0;
+            transform: skew(-12deg);
+            border-radius: 2px 0 2px 2px;
+        }
+        
+        .bowtie::after {
+            right: 0;
+            transform: skew(12deg);
+            border-radius: 0 2px 2px 2px;
+        }
+        
+        /* Bowtie center knot */
+        .bowtie-knot {
+            position: absolute;
+            width: 4px;
+            height: 7px;
+            background: linear-gradient(to bottom, #dc2626 0%, #b91c1c 100%);
+            left: 50%;
+            top: 1px;
+            transform: translateX(-50%);
+            border-radius: 1px;
+            z-index: 1;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+        }
+        
+        /* Front legs/flippers - more integrated */
+        .leg-front {
+            position: absolute;
+            width: 14px;
+            height: 9px;
+            background: linear-gradient(135deg, #3bd062 0%, #2d8b4e 100%);
+            border-radius: 70% 30% 50% 50% / 50% 50% 50% 50%;
+            top: 15px;
+            left: 3px;
+            transform: rotate(-25deg);
+            transform-origin: 80% 50%;
+            animation: swim 0.4s ease-in-out infinite alternate;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        
+        /* Back legs/flippers - more integrated */
+        .leg-back {
+            position: absolute;
+            width: 12px;
+            height: 8px;
+            background: linear-gradient(135deg, #3bd062 0%, #2d8b4e 100%);
+            border-radius: 70% 30% 50% 50% / 50% 50% 50% 50%;
+            bottom: 10px;
+            left: 4px;
+            transform: rotate(20deg);
+            transform-origin: 80% 50%;
+            animation: swim 0.4s ease-in-out infinite alternate-reverse;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+        
+        @keyframes swim {
+            from { transform: rotate(-20deg) translateY(0); }
+            to { transform: rotate(-30deg) translateY(-2px); }
+        }
+        
+        /* Small integrated tail */
+        .tail {
+            position: absolute;
+            width: 8px;
+            height: 6px;
+            background: linear-gradient(135deg, #3bd062 0%, #2d8b4e 100%);
+            border-radius: 30% 70% 70% 30% / 50% 50% 50% 50%;
+            bottom: 14px;
+            left: 2px;
+            transform: rotate(-20deg);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .pipe {
+            position: absolute;
+            width: 65px;
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+            border: 3px solid #78350f;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .pipe-top {
+            top: 0;
+        }
+        
+        .pipe-bottom {
+            bottom: 0;
+        }
+        
+        .pipe::before, .pipe::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 35px;
+            background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+            border: 3px solid #78350f;
+            left: -10px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .pipe-top::after {
+            bottom: -3px;
+        }
+        
+        .pipe-bottom::before {
+            top: -3px;
+        }
+        
+        /* Coral decorations on pipes */
+        .pipe::after {
+            background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%),
+                        radial-gradient(circle at 20% 50%, #fb923c 0%, transparent 30%),
+                        radial-gradient(circle at 70% 30%, #fdba74 0%, transparent 25%);
+        }
+        
+        #scoreDisplay {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 52px;
+            color: white;
+            text-shadow: 3px 3px 0 #4c1d95, 5px 5px 10px rgba(0,0,0,0.5);
+            z-index: 100;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        
+        #gameOverScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%);
+            padding: 35px 45px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            border: 3px solid #4c1d95;
+            min-width: 260px;
+            max-width: 90%;
+        }
+        
+        #gameOverScreen h2 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            color: #4c1d95;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+        
+        #gameOverScreen p {
+            margin: 10px 0;
+            font-size: 20px;
+            color: #6b21a8;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        #gameOverScreen button {
+            margin-top: 20px;
+            padding: 14px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Fredoka', cursive;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        #gameOverScreen button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%);
+            padding: 35px 45px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            border: 3px solid #4c1d95;
+            min-width: 280px;
+            max-width: 90%;
+        }
+        
+        #startScreen h1 {
+            margin: 0 0 20px 0;
+            font-size: 38px;
+            color: #4c1d95;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+        
+        #startScreen .turtle-emoji {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+        
+        #startScreen p {
+            margin: 12px 0;
+            font-size: 18px;
+            color: #6b21a8;
+            font-weight: 500;
+            line-height: 1.4;
+            padding: 0 10px;
+        }
+        
+        #startScreen button {
+            margin-top: 25px;
+            padding: 16px 45px;
+            font-size: 22px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Fredoka', cursive;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        #startScreen button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+        }
+        
+        .ocean-floor {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 80px;
+            background: linear-gradient(to bottom, #fbbf24 0%, #f59e0b 30%, #d97706 100%);
+            border-top: 4px solid #92400e;
+            animation: moveGround 4s linear infinite;
+        }
+        
+        /* Sand texture */
+        .ocean-floor::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 10px,
+                rgba(146, 64, 14, 0.1) 10px,
+                rgba(146, 64, 14, 0.1) 20px
+            );
+        }
+        
+        @keyframes moveGround {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(173,216,230,0.4));
+            border: 1px solid rgba(255,255,255,0.5);
+            opacity: 0.6;
+            animation: floatBubble 8s ease-in-out infinite;
+        }
+        
+        .bubble1 {
+            width: 25px;
+            height: 25px;
+            top: 400px;
+            left: 50px;
+            animation-delay: 0s;
+        }
+        
+        .bubble2 {
+            width: 15px;
+            height: 15px;
+            top: 450px;
+            left: 300px;
+            animation-delay: 2s;
+        }
+        
+        .bubble3 {
+            width: 20px;
+            height: 20px;
+            top: 350px;
+            left: 200px;
+            animation-delay: 4s;
+        }
+        
+        @keyframes floatBubble {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.6;
+            }
+            25% {
+                transform: translateY(-30px) translateX(10px);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-50px) translateX(-5px);
+                opacity: 0.7;
+            }
+            75% {
+                transform: translateY(-30px) translateX(5px);
+                opacity: 0.8;
+            }
+        }
+        
+        .seaweed {
+            position: absolute;
+            bottom: 80px;
+            width: 30px;
+            height: 60px;
+            background: linear-gradient(to top, #065f46 0%, #10b981 100%);
+            border-radius: 50% 10% 50% 10%;
+            transform-origin: bottom center;
+            animation: swaySeaweed 4s ease-in-out infinite;
+            opacity: 0.7;
+        }
+        
+        .seaweed1 {
+            left: 100px;
+            animation-delay: 0s;
+        }
+        
+        .seaweed2 {
+            left: 280px;
+            height: 45px;
+            animation-delay: 1s;
+        }
+        
+        @keyframes swaySeaweed {
+            0%, 100% {
+                transform: rotate(-5deg);
+            }
+            50% {
+                transform: rotate(5deg);
+            }
+        }
+        
+        /* Language toggle button */
+        .language-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%);
+            border: 2px solid #4c1d95;
+            border-radius: 25px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Fredoka', cursive;
+            font-size: 16px;
+            font-weight: 600;
+            color: #4c1d95;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .language-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        }
+        
+        .language-toggle .flag {
+            font-size: 20px;
+        }
+        
+        .language-toggle .lang-text {
+            font-size: 14px;
+            min-width: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Language toggle button (outside game container) -->
+    <button class="language-toggle" onclick="toggleLanguage()">
+        <span class="flag">🇺🇸</span>
+        <span class="lang-text">EN</span>
+    </button>
+    
+    <div id="gameContainer">
+        <!-- Decorative bubbles -->
+        <div class="bubble bubble1"></div>
+        <div class="bubble bubble2"></div>
+        <div class="bubble bubble3"></div>
+        
+        <!-- Seaweed decorations -->
+        <div class="seaweed seaweed1"></div>
+        <div class="seaweed seaweed2"></div>
+        
+        <div id="scoreDisplay">0</div>
+        
+        <!-- Turtle character -->
+        <div id="turtle">
+            <div class="turtle-body">
+                <div class="shell"></div>
+            </div>
+            <div class="leg-front"></div>
+            <div class="leg-back"></div>
+            <div class="head">
+                <div class="face">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
+            <div class="bowtie">
+                <div class="bowtie-knot"></div>
+            </div>
+            <div class="tail"></div>
+        </div>
+        
+        <div id="startScreen">
+            <div class="turtle-emoji">🐢</div>
+            <h1 data-en="Flappy Turtle" data-zh="飞天乌龟">Flappy Turtle</h1>
+            <p><strong data-en="Click or Press Space to Swim!" data-zh="点击或空格键游泳">Click or Press Space to Swim!</strong></p>
+            <p data-en="Guide the dapper turtle through the coral pipes" data-zh="带领乌龟穿过珊瑚管">Guide the dapper turtle through the coral pipes</p>
+            <button onclick="startGame()" data-en="Start Adventure" data-zh="开始游戏">Start Adventure</button>
+        </div>
+        
+        <div id="gameOverScreen">
+            <h2 data-en="Shell Shocked!" data-zh="游戏结束！">Shell Shocked!</h2>
+            <p><span data-en="Score" data-zh="得分">Score</span>: <span id="finalScore">0</span></p>
+            <p><span data-en="Best" data-zh="最高">Best</span>: <span id="bestScore">0</span></p>
+            <button onclick="resetGame()" data-en="Try Again" data-zh="再玩一次">Try Again</button>
+        </div>
+        
+        <div class="ocean-floor"></div>
+    </div>
+    
+    <script>
+        // Language system
+        let currentLanguage = localStorage.getItem('flappyTurtleLanguage') || 'en';
+        
+        // Translation system
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-en][data-zh]');
+            elements.forEach(element => {
+                const text = element.getAttribute(`data-${currentLanguage}`);
+                if (element.tagName === 'BUTTON') {
+                    element.textContent = text;
+                } else if (element.tagName === 'STRONG') {
+                    element.textContent = text;
+                } else if (element.tagName === 'SPAN') {
+                    element.textContent = text;
+                } else {
+                    element.textContent = text;
+                }
+            });
+            
+            // Update language toggle button
+            const langToggle = document.querySelector('.language-toggle');
+            if (currentLanguage === 'en') {
+                langToggle.innerHTML = '<span class="flag">🇺🇸</span><span class="lang-text">EN</span>';
+            } else {
+                langToggle.innerHTML = '<span class="flag">🇨🇳</span><span class="lang-text">中文</span>';
+            }
+        }
+        
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
+            localStorage.setItem('flappyTurtleLanguage', currentLanguage);
+            updateLanguage();
+        }
+        
+        // Initialize language on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLanguage();
+        });
+        
+        const gameContainer = document.getElementById('gameContainer');
+        const turtle = document.getElementById('turtle');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const startScreen = document.getElementById('startScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+        const bestScoreElement = document.getElementById('bestScore');
+        
+        let turtleY = 250;
+        let velocity = 0;
+        const gravity = 0.45;
+        const jumpStrength = -7.5;
+        let score = 0;
+        let bestScore = localStorage.getItem('flappyTurtleBestScore') || 0;
+        let gameRunning = false;
+        let gameStarted = false;
+        let pipes = [];
+        let animationId;
+        
+        const pipeGap = 160;
+        const pipeSpeed = 2.2;
+        const pipeSpawnInterval = 2000;
+        let lastPipeSpawn = 0;
+        
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameStarted = true;
+            gameRunning = true;
+            turtleY = 250;
+            velocity = 0;
+            score = 0;
+            scoreDisplay.textContent = score;
+            pipes = [];
+            document.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+            lastPipeSpawn = Date.now();
+            
+            // Reset leg animations
+            document.querySelectorAll('.leg-front, .leg-back').forEach(leg => {
+                leg.style.animationPlayState = 'running';
+            });
+            
+            gameLoop();
+        }
+        
+        function jump() {
+            if (gameRunning) {
+                velocity = jumpStrength;
+                turtle.style.transform = 'rotate(-15deg)';
+                
+                // Accelerate leg animation on jump
+                document.querySelectorAll('.leg-front, .leg-back').forEach(leg => {
+                    leg.style.animationDuration = '0.2s';
+                });
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.leg-front, .leg-back').forEach(leg => {
+                        leg.style.animationDuration = '0.4s';
+                    });
+                }, 300);
+            }
+        }
+        
+        function createPipe() {
+            const pipeHeight = Math.random() * 200 + 100;
+            const pipeX = 400;
+            
+            const pipeTop = document.createElement('div');
+            pipeTop.className = 'pipe pipe-top';
+            pipeTop.style.height = pipeHeight + 'px';
+            pipeTop.style.left = pipeX + 'px';
+            
+            const pipeBottom = document.createElement('div');
+            pipeBottom.className = 'pipe pipe-bottom';
+            pipeBottom.style.height = (600 - pipeHeight - pipeGap - 80) + 'px';
+            pipeBottom.style.left = pipeX + 'px';
+            
+            gameContainer.appendChild(pipeTop);
+            gameContainer.appendChild(pipeBottom);
+            
+            pipes.push({
+                topElement: pipeTop,
+                bottomElement: pipeBottom,
+                x: pipeX,
+                scored: false
+            });
+        }
+        
+        function updatePipes() {
+            const currentTime = Date.now();
+            if (currentTime - lastPipeSpawn > pipeSpawnInterval) {
+                createPipe();
+                lastPipeSpawn = currentTime;
+            }
+            
+            pipes = pipes.filter(pipe => {
+                pipe.x -= pipeSpeed;
+                pipe.topElement.style.left = pipe.x + 'px';
+                pipe.bottomElement.style.left = pipe.x + 'px';
+                
+                if (pipe.x < -60) {
+                    pipe.topElement.remove();
+                    pipe.bottomElement.remove();
+                    return false;
+                }
+                
+                if (!pipe.scored && pipe.x < 80) {
+                    score++;
+                    scoreDisplay.textContent = score;
+                    pipe.scored = true;
+                }
+                
+                return true;
+            });
+        }
+        
+        function checkCollision() {
+            const turtleRect = turtle.getBoundingClientRect();
+            const containerRect = gameContainer.getBoundingClientRect();
+            
+            const turtleRelativeRect = {
+                left: turtleRect.left - containerRect.left,
+                right: turtleRect.right - containerRect.left,
+                top: turtleRect.top - containerRect.top,
+                bottom: turtleRect.bottom - containerRect.top
+            };
+            
+            if (turtleRelativeRect.top < 0 || turtleRelativeRect.bottom > 520) {
+                return true;
+            }
+            
+            for (let pipe of pipes) {
+                const topRect = pipe.topElement.getBoundingClientRect();
+                const bottomRect = pipe.bottomElement.getBoundingClientRect();
+                
+                const topRelativeRect = {
+                    left: topRect.left - containerRect.left,
+                    right: topRect.right - containerRect.left,
+                    top: topRect.top - containerRect.top,
+                    bottom: topRect.bottom - containerRect.top
+                };
+                
+                const bottomRelativeRect = {
+                    left: bottomRect.left - containerRect.left,
+                    right: bottomRect.right - containerRect.left,
+                    top: bottomRect.top - containerRect.top,
+                    bottom: bottomRect.bottom - containerRect.top
+                };
+                
+                if (turtleRelativeRect.right > topRelativeRect.left && 
+                    turtleRelativeRect.left < topRelativeRect.right) {
+                    if (turtleRelativeRect.top < topRelativeRect.bottom || 
+                        turtleRelativeRect.bottom > bottomRelativeRect.top) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            velocity += gravity;
+            turtleY += velocity;
+            
+            if (velocity > 0) {
+                turtle.style.transform = `rotate(${Math.min(velocity * 2.5, 45)}deg)`;
+            }
+            
+            turtle.style.top = turtleY + 'px';
+            
+            updatePipes();
+            
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('flappyTurtleBestScore', bestScore);
+            }
+            
+            bestScoreElement.textContent = bestScore;
+            gameOverScreen.style.display = 'block';
+            
+            // Stop leg animations
+            document.querySelectorAll('.leg-front, .leg-back').forEach(leg => {
+                leg.style.animationPlayState = 'paused';
+            });
+        }
+        
+        function resetGame() {
+            gameOverScreen.style.display = 'none';
+            startGame();
+        }
+        
+        gameContainer.addEventListener('click', () => {
+            if (gameStarted) {
+                jump();
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && gameStarted) {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        bestScoreElement.textContent = bestScore;
+        
+        // Initialize language on page load
+        updateLanguage();
+    </script>
+</body>
+</html>
