@@ -20,10 +20,6 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Fredoka', cursive;
             overflow: hidden;
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         
         #gameContainer {
@@ -38,6 +34,14 @@
             cursor: pointer;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             border-radius: 12px;
+        }
+        
+        /* Only prevent selection on game area during gameplay */
+        #gameContainer.playing {
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         /* Mobile responsiveness */
@@ -429,6 +433,9 @@
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
             transition: all 0.3s ease;
+            /* Ensure button is clickable on mobile */
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            touch-action: manipulation;
         }
         
         #gameOverScreen button:hover {
@@ -487,6 +494,9 @@
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
             transition: all 0.3s ease;
+            /* Ensure button is clickable on mobile */
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            touch-action: manipulation;
         }
         
         #startScreen button:hover {
@@ -682,6 +692,9 @@
             align-items: center;
             gap: 8px;
             backdrop-filter: blur(5px);
+            /* Ensure clickable on mobile */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
         }
         
         .language-toggle:hover {
@@ -895,6 +908,9 @@
             document.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
             lastPipeSpawn = Date.now();
             
+            // Add playing class to prevent touch issues during gameplay
+            gameContainer.classList.add('playing');
+            
             // Reset leg animations
             document.querySelectorAll('.leg-front, .leg-back').forEach(leg => {
                 leg.style.animationPlayState = 'running';
@@ -1045,6 +1061,9 @@
             gameRunning = false;
             finalScoreElement.textContent = score;
             
+            // Remove playing class to allow normal touch on menus
+            gameContainer.classList.remove('playing');
+            
             if (score > bestScore) {
                 bestScore = score;
                 localStorage.setItem('flappyTurtleBestScore', bestScore);
@@ -1077,16 +1096,19 @@
         
         // Touch events for mobile
         gameContainer.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (gameStarted) {
+            // Only prevent default if game is running, not on menus
+            if (gameRunning) {
+                e.preventDefault();
                 jump();
             }
-        });
+        }, { passive: false });
         
-        // Prevent double-tap zoom on mobile
+        // Prevent double-tap zoom on mobile during gameplay
         gameContainer.addEventListener('touchend', (e) => {
-            e.preventDefault();
-        });
+            if (gameRunning) {
+                e.preventDefault();
+            }
+        }, { passive: false });
         
         // Keyboard events
         document.addEventListener('keydown', (e) => {
